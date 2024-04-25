@@ -1,0 +1,78 @@
+# This CI/CD configuration extends the Terraform Cloud Workflows for GitLab
+# https://github.com/hashicorp/tfc-workflows-gitlab to perform the following:
+# 1. Create and upload a configuration version to terraform-cloud.variables
+# 2. Create a Terraform Cloud run
+# 3. Output the Terraform plan details
+# 4. Call the Terraform API in https://developer.hashicorp.com/terraform/cloud-docs/api-docs/plans#retrieve-the-json-execution-plan
+# to retrieve the plan for Resourcely to use
+
+# When a merge-request is created, after the plan stage completes, the Resourcely guardrail validation job
+# https://github.com/Resourcely-Inc/resourcely-gitlab-template is kicked off in the test stage and validates
+# the plan against your configured Resourcely guardrails
+
+# Requires the following private variables to be configured:
+# RESOURCELY_API_TOKEN: Your Resourcely API Token
+# TF_API_TOKEN: Your Terraform Cloud Team Token
+
+stages:
+  - plan
+  - test
+
+# These variables must be set in accordance to your Terraform Cloud Instance, see
+# https://github.com/hashicorp/tfc-workflows-gitlab/blob/main/Base.gitlab-ci.yml for guidance
+variables:
+  TF_CLOUD_ORGANIZATION: "acme-cloud"
+  TF_WORKSPACE: "scaffolding-gitlab-terraform-cloud"
+  TF_CLOUD_HOSTNAME: "app.terraform.io"
+  TF_PLAN_DIRECTORY: $CI_PROJECT_DIR
+
+include:
+  - remote: https://raw.githubusercontent.com/hashicorp/tfc-workflows-gitlab/v1.0.3/Base.gitlab-ci.yml
+  - remote: 'https://raw.githubusercontent.com/Resourcely-Inc/resourcely-gitlab-template/main/.resourcely.gitlab-ci.yml'
+
+# Create and upload a configuration version to terraform-cloud.variables
+upload_configuration:
+  stage: "plan"
+  extends: .tfc:upload_configuration
+  variables:
+    # Speculative plans are plan-only runs. They show possible changes, and policies affected by
+    # those changes, but cannot apply any changes.
+    # https://developer.hashicorp.com/terraform/cloud-docs/run/remote-operations#speculative-plans
+    SPECULATIVE: "true"
+
+# Create a Terraform Cloud run
+create_run:
+  stage: "plan"
+  extends: .tfc:create_run
+  variables:
+    PLAN_ONLY: "true"
+    MESSAGE: "LGTM"
+  needs: [upload_configuration]
+
+# Output Plan details
+plan_output:
+  stage: "plan"
+  extends: .tfc:plan_output
+  needs: [create_run]
+
+# Download the plan from the Terraform run
+download_plan:
+  stage: plan
+  image: alpine/curl
+  # $plan_id is obtained from .env which is exported by the overwritten create_run which overwrites
+  # .tfc:create_run in https://github.com/hashicorp/tfc-workflows-gitlab/blob/main/Base.gitlab-ci.yml
+  variables:
+    PLAN_ID: $plan_id
+  script:
+    - 'curl -X GET --header "Authorization: Bearer $TF_API_TOKEN" --header "Content-Type: application/vnd.api+json"
+      --location https://$TF_CLOUD_HOSTNAME/api/v2/plans/$PLAN_ID/json-output > $TF_PLAN_DIRECTORY/plan.json'
+  artifacts:
+    reports:
+      dotenv: .env
+    paths:
+      - $TF_PLAN_DIRECTORY/plan.json
+  needs: [plan_output]
+
+# Override resourcely job to depend on download_plan
+resourcely_guardrails:
+  needs: [download_plan]
