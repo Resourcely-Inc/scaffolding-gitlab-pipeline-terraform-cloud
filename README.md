@@ -41,7 +41,7 @@ This repository uses GitLab CI/CD + Terraform Cloud to generate a Terraform plan
     h. Unselect **Expand variable reference**  
     i. Press the **Add variable** button  
 5. [Generate a Terraform Cloud Team Token](https://developer.hashicorp.com/terraform/cloud-docs/users-teams-organizations/api-tokens#team-api-tokens)
-6. Add the Terraform Cloud Team token `TF_API_TOKEN` to GitLab following the same process in step 3
+6. Add the Terraform Cloud Team token `TF_API_TOKEN` to GitLab following the same process in step 4
 7. Configure Terraform Cloud Credentials
     a. Edit `.gitlab-ci.yml`  
     b. Edit the value of **TF_CLOUD_ORGANIZATION** to match your Terraform Cloud Organization  
