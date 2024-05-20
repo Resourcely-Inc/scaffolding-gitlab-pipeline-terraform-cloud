@@ -27,9 +27,10 @@ This repository uses GitLab CI/CD + Terraform Cloud to generate a Terraform plan
     c. Select **Repository by URL**  
     d. Enter the **Git repository URL**: https://github.com/Resourcely-Inc/scaffolding-gitlab-pipeline-terraform-cloud.git  
     e. Complete the remaining fields  
-    f. Select **Create project**  
-2. [Generate a Resourcely API Token](https://docs.resourcely.io/onboarding/api-access-token-generation) and save it in a safe place
-3. Add your Resourcely API Token to your [GitLab project CI/CD variables](https://docs.gitlab.com/ee/ci/variables/)  
+    f. Select **Create project**
+2. [Allow Resourcely to monitor the newly created project](https://docs.resourcely.io/onboarding/source-code-management-integration/gitlab#choosing-a-repository-for-resourcely-to-monitor)
+3. [Generate a Resourcely API Token](https://docs.resourcely.io/onboarding/api-access-token-generation) and save it in a safe place
+4. Add your Resourcely API Token to your [GitLab project CI/CD variables](https://docs.gitlab.com/ee/ci/variables/)  
     a. Go to the GitLab project that Resourcely will validate  
     b. In the side tab, navigate to **Settings > CI/CD**  
     c. Expand the **Variables** tab  
@@ -39,15 +40,15 @@ This repository uses GitLab CI/CD + Terraform Cloud to generate a Terraform plan
     g. Select the **Mask variable** to protect sensitive data from being seen in job logs  
     h. Unselect **Expand variable reference**  
     i. Press the **Add variable** button  
-4. [Generate a Terraform Cloud Team Token](https://developer.hashicorp.com/terraform/cloud-docs/users-teams-organizations/api-tokens#team-api-tokens)
-5. Add the Terraform Cloud Team token `TF_API_TOKEN` to GitLab following the same process in step 3
-6. Configure Terraform Cloud Credentials
+5. [Generate a Terraform Cloud Team Token](https://developer.hashicorp.com/terraform/cloud-docs/users-teams-organizations/api-tokens#team-api-tokens)
+6. Add the Terraform Cloud Team token `TF_API_TOKEN` to GitLab following the same process in step 3
+7. Configure Terraform Cloud Credentials
     a. Edit `.gitlab-ci.yml`  
     b. Edit the value of **TF_CLOUD_ORGANIZATION** to match your Terraform Cloud Organization  
     c. Edit the value of **TF_WORKSPACE** to match your Terraform Cloud Workspace  
     d. Edit the value of **TF_CLOUD_HOSTNAME** to match your Terraform Cloud Hostname  
     e. Commit the `.gitlab-ci.yml` file to your main branch  
-7. [Provision Infrastructure using Resourcely](https://docs.resourcely.io/using-resourcely)  
+8. [Provision Infrastructure using Resourcely](https://docs.resourcely.io/using-resourcely)  
 
 Once a new Resource has been created via Merge-Request, the Resourcely job will automatically kick-off. It runs in the **test** stage by default.
 
